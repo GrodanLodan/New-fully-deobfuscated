@@ -1,0 +1,152 @@
+'use strict';
+alert("klicka ok f\u00f6r att forts\u00e4tta din b\u00f6g");
+const data = {
+  checkpoint : {
+    question : "#LiveGameStudentTarget > div > div:nth-child(2) > div > div > div:nth-child(2) > div > h2 > div > div",
+    boxes : "#LiveGameStudentTarget > div > div:nth-child(2) > div > div:nth-child(3)"
+  },
+  normal : {
+    question : ".QuestionView > div > div:last-child ",
+    boxes : ".QuestionView > div:nth-child(2)"
+  }
+};
+const parse = (docblock_) => {
+  const filenameFilter = docblock_.querySelectorAll(".TermText");
+  const subselects = [];
+  let ii = 0;
+  for (; ii < filenameFilter.length;) {
+    let tokens = {
+      text : filenameFilter[ii].textContent,
+      answer : filenameFilter[ii].textContent
+    };
+    ii++;
+    subselects.push(tokens);
+    ii++;
+  }
+  return subselects;
+};
+const findAnswer = (breakOnInfix, breakOnTokenText) => {
+  return breakOnInfix.filter((data) => {
+    if (data.text === breakOnTokenText) {
+      return data.answer;
+    } else {
+      if (data.answer === breakOnTokenText) {
+        return data.text;
+      }
+    }
+  });
+};
+const displayAnswer = (removedModules, hash) => {
+  const navigate_rule = data[hash].boxes;
+  for (let store of removedModules) {
+    let endAccelerationPoint = 1;
+    for (; endAccelerationPoint <= document.querySelector(navigate_rule).children.length;) {
+      if (hash === "checkpoint") {
+        const code = document.querySelector(navigate_rule + " > div:nth-child(" + endAccelerationPoint + ") > div:nth-child(2) > div > div").textContent;
+        if (code === store.text || code === store.answer) {
+          /** @type {string} */
+          document.querySelector(navigate_rule + " > div:nth-child(" + endAccelerationPoint + ")").style.backgroundColor = "#50C878";
+        }
+      } else {
+        if (hash === "normal") {
+          const _timeDisplay = document.querySelector(navigate_rule + " > div:nth-child(" + endAccelerationPoint + ") > span > button > span");
+          const code = _timeDisplay.textContent;
+          if (code === store.text || code === store.answer) {
+            /** @type {string} */
+            _timeDisplay.style.backgroundColor = "#50C878";
+          }
+        }
+      }
+      endAccelerationPoint++;
+    }
+  }
+};
+const clearBackground = (hash) => {
+  const navigate_rule = data[hash].boxes;
+  let endAccelerationPoint = 1;
+  for (; endAccelerationPoint <= document.querySelector(navigate_rule).children.length;) {
+    if (hash === "normal") {
+      /** @type {string} */
+      document.querySelector(navigate_rule + " > div:nth-child(" + endAccelerationPoint + ") > span > button > span").style.backgroundColor = "#FA6969";
+    } else {
+      if (hash === "checkpoint") {
+        /** @type {string} */
+        document.querySelector(navigate_rule + " > div:nth-child(" + endAccelerationPoint + ")").style.backgroundColor = "#FA6969";
+      }
+    }
+    endAccelerationPoint++;
+  }
+};
+const showAnswers = (commentObj, i) => {
+  const target = data[i].question;
+  let lastTrackTitle = "";
+  setInterval(() => {
+    if (document.querySelector(target)) {
+      const track = document.querySelector(target).textContent;
+      if (lastTrackTitle !== track) {
+        clearBackground(i);
+        const GET_AUTH_URL_TIMEOUT = findAnswer(commentObj, track);
+        displayAnswer(GET_AUTH_URL_TIMEOUT, i);
+        lastTrackTitle = track;
+      }
+    }
+  }, 500);
+};
+const info = () => {
+  console.log("%cGjord Av Ruben", "color: #6366f1; font-size: 16px; font-weight: bold;");
+  console.log("%cGustav gillar stora svarta m\u00e4n", "font-size: 14px;");
+  console.log("%cPrivat Gjord F\u00f6r Kuksugarna", "font-size: 14px;");
+};
+const main = async() => {
+  console.clear();
+  if (!(window.Quizlet && window.Quizlet.liveGameStudentData)) {
+    throw new Error("Du \u00e4r ju inte i ett spel f\u00f6r helvete");
+  }
+  if (Quizlet.liveGameStudentData.isPlayingCheckpoint) {
+    const campaignId = Quizlet.liveGameStudentData.checkpointToken;
+    const _0x2082d3 = Quizlet.liveGameStudentData.initialGameCode;
+    const _0x3726c3 = await (await fetch("https://checkpoint.quizlet.com/join?gameCode=" + _0x2082d3 + "&token=" + campaignId)).json();
+    const tokenID = _0x3726c3.studiableContainerId;
+    const publicInfo = await fetch("https://quizlet.com/" + tokenID);
+    if (publicInfo.status !== 200) {
+      throw new Error("Detta spelet \u00e4r privat");
+    }
+    const responseText = await publicInfo.text();
+    const domParser = new DOMParser;
+    const req_group = domParser.parseFromString(responseText, "text/html");
+    return {
+      data : parse(req_group),
+      type : "checkpoint"
+    };
+  } else {
+    const type = Object.keys(document.getElementsByClassName("StudentLayout")[0]).find((outputFileData) => {
+      return outputFileData.startsWith("__reactFiber$");
+    });
+    const vector = document.getElementsByClassName("StudentLayout")[0][type].alternate.alternate.alternate.memoizedProps.children[2].props.children.props.terms;
+    if (!vector) {
+      throw new Error("Du \u00e4r ju inte i ett spel f\u00f6r helvete");
+    }
+    const navLinksArr = vector._tail.array;
+    const maindata3 = navLinksArr.map((tag) => {
+      return {
+        text : tag._root.nodes[4].entry[1],
+        answer : tag._root.nodes[10].nodes[0].nodes[0].entry[1]
+      };
+    });
+    return {
+      data : maindata3,
+      type : "normal"
+    };
+  }
+};
+const start = async() => {
+  try {
+    const verifiedEvent = await main();
+    console.log("%cAllt fungerar som det ska!", "color: #50C878; font-size: 22px");
+    info();
+    showAnswers(verifiedEvent.data, verifiedEvent.type);
+  } catch (ticketID) {
+    console.log("%c" + ticketID, "color: #FA6969; font-size: 22px");
+  }
+};
+start();
